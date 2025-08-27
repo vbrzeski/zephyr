@@ -2831,7 +2831,7 @@ static inline void dwc2_handle_oepint(const struct device *dev)
 	uint32_t doepmsk;
 	uint32_t epint;
 
-	doepmsk = sys_read32((mem_addr_t)&base->doepmsk);
+	doepmsk = sys_read32((mem_addr_t)&base->doepmsk) | USB_DWC2_DOEPINT_PKTDRPSTS;
 	epint = usb_dwc2_get_daint_outepint(sys_read32((mem_addr_t)&base->daint));
 
 	while (epint) {
@@ -2883,6 +2883,10 @@ static inline void dwc2_handle_oepint(const struct device *dev)
 			 * device to host.
 			 */
 			dwc2_clear_control_in_nak(dev);
+		}
+
+		if (status & USB_DWC2_DOEPINT_PKTDRPSTS) {
+			LOG_ERR("PKTDRPSTS=1 for EP%02x", n);
 		}
 
 		if (status & USB_DWC2_DOEPINT_XFERCOMPL) {

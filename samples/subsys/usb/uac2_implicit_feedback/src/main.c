@@ -17,6 +17,8 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/linker/devicetree_regions.h>
 
+#include <zephyr/random/random.h>
+
 LOG_MODULE_REGISTER(uac2_sample, LOG_LEVEL_INF);
 
 #define HEADPHONES_OUT_TERMINAL_ID UAC2_ENTITY_ID(DT_NODELABEL(out_terminal))
@@ -708,6 +710,25 @@ int main(void)
 	if (ret) {
 		return ret;
 	}
+
+	// Destroy the USB stack
+	while (1) {
+		extern bool g_pktdrpsts;
+		k_sleep(K_MSEC(5000));
+		LOG_INF("Wreaking havoc to reproduce pktdrpsts=1");
+		while (!g_pktdrpsts) {
+			// EXMIF is locking out everyone for 1.5ms. Lets do that
+			const uint32_t usec_delay = rand() % 2000;
+			LOG_INF("Busy sleeping with IRQs locked out for %d us", usec_delay);
+			// log :/
+			k_sleep(K_USEC(100));
+			const unsigned int key = irq_lock();
+			k_busy_wait(usec_delay);
+			irq_unlock(key);
+		}
+		LOG_INF("pktdrpsts=1, giving the USB stack a break...");
+	}
+
 
 	return 0;
 }

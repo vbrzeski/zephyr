@@ -2824,6 +2824,8 @@ static inline void dwc2_handle_out_xfercompl(const struct device *dev,
 	}
 }
 
+bool g_pktdrpsts = false;
+
 static inline void dwc2_handle_oepint(const struct device *dev)
 {
 	struct usb_dwc2_reg *const base = dwc2_get_base(dev);
@@ -2887,6 +2889,7 @@ static inline void dwc2_handle_oepint(const struct device *dev)
 
 		if (status & USB_DWC2_DOEPINT_PKTDRPSTS) {
 			LOG_ERR("PKTDRPSTS=1 for EP%02x", n);
+			g_pktdrpsts = true;
 		}
 
 		if (status & USB_DWC2_DOEPINT_XFERCOMPL) {

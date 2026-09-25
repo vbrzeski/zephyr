@@ -22,6 +22,18 @@ properties:
     description: |
       Size of the virtual CDC ACM UART RX FIFO
 
+  memory-region:
+    type: phandle
+    description: |
+      Memory region to keep the TX FIFO in, so that data not yet received
+      by the host survives a reset and is sent after the next enumeration.
+      The FIFO state and tx-fifo-size bytes of data are placed at the start
+      of the region. Images sharing the region may use different
+      tx-fifo-size values; data left by another image is sent if its FIFO
+      fits the region. Data still in a data cache is lost on a reset, so make
+      the region non-cacheable, or call cdc_acm_retained_tx_fifo_flush()
+      right before a software reset (e.g. from the fatal error handler).
+
   label:
     description: |
       The string defined by the label property is also used for the USB

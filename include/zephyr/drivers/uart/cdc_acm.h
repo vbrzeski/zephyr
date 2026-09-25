@@ -48,6 +48,22 @@ typedef void (*cdc_dte_rate_callback_t)(const struct device *dev,
 __deprecated int cdc_acm_dte_rate_callback_set(const struct device *dev,
 				  cdc_dte_rate_callback_t callback);
 
+/**
+ * @brief Write the retained TX FIFO back from the data cache.
+ *
+ * Data still in the TX FIFO survives a reset only if it is in memory. When the
+ * memory-region of the instance is cacheable, call this right before a software
+ * reset, e.g. from a fatal error handler, after the last write to the FIFO.
+ *
+ * @param dev CDC ACM device structure.
+ *
+ * @retval 0 on success.
+ * @retval -ENOTSUP if the instance has no memory-region or cache management is
+ *         not supported.
+ * @retval -errno other negative value from sys_cache_data_flush_range().
+ */
+int cdc_acm_retained_tx_fifo_flush(const struct device *dev);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -863,6 +863,7 @@ New APIs and options
   * :c:func:`ring_buf_get_ptr`
   * :c:func:`ring_buf_commit`
   * :c:func:`ring_buf_consume`
+  * :c:func:`ring_buf_recover`
 
 * Secure Storage
 

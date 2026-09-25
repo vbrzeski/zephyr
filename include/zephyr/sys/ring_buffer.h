@@ -272,6 +272,47 @@ static inline void ring_buf_init(struct ring_buf *rb, uint32_t size, uint8_t *da
 }
 
 /**
+ * @brief Recover a ring buffer kept across a reset.
+ *
+ * Used instead of @ref ring_buf_init for a ring buffer whose structure and
+ * data area are in memory that is retained across a reset. Only the capacity
+ * and indices are kept; the data area is set to @p data. Claims left open by
+ * the deprecated claim API are released: unfinished writes are dropped and
+ * unfinished reads stay in the buffer. The ring buffer is then checked to be
+ * no larger than @p max_size and to have consistent indices. If the check
+ * fails, the ring buffer must be initialized with @ref ring_buf_init before
+ * use.
+ *
+ * @param rb       Address of ring buffer.
+ * @param max_size Largest accepted capacity (in bytes).
+ * @param data     Ring buffer data area (uint8_t data[max_size]).
+ *
+ * @retval 0 Ring buffer is valid and keeps its data.
+ * @retval -EINVAL Ring buffer is invalid.
+ */
+static inline int ring_buf_recover(struct ring_buf *rb, uint32_t max_size, uint8_t *data)
+{
+	uint32_t lim;
+
+	rb->buffer = data;
+#ifdef CONFIG_RING_BUFFER
+	rb->put_claimed = 0;
+	rb->get_claimed = 0;
+#endif /* CONFIG_RING_BUFFER */
+
+	if (rb->size == 0U || rb->size > MIN(max_size, RING_BUFFER_MAX_SIZE)) {
+		return -EINVAL;
+	}
+
+	lim = 2U * rb->size;
+	if (rb->read_idx >= lim || rb->write_idx >= lim || ring_buf_size_get(rb) > rb->size) {
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+/**
  * @brief Get address of region for writing data to a ring buffer.
  *
  * Memory copying can be reduced since the internal ring buffer storage can be
